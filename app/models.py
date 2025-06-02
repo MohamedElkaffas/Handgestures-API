@@ -1,8 +1,8 @@
 """
-Pydantic models for request/response validation
+Pydantic models for request/response validation  
 """
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import List
 
 class GestureInput(BaseModel):
@@ -40,6 +40,10 @@ class MazeControlResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Response model for health check - Fixed field name"""
+    
+    # This line fixes the Pydantic namespace warning
+    model_config = ConfigDict(protected_namespaces=())
+    
     status: str = Field(..., description="Service status")
     model_status: bool = Field(..., description="Whether model is loaded")  
     timestamp: str = Field(..., description="Timestamp of health check")

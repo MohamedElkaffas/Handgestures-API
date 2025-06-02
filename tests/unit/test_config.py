@@ -17,7 +17,9 @@ class TestConfiguration:
         assert settings.MODEL_PATH == "model/best_hand_gesture.pkl"
         assert settings.ENCODER_PATH == "model/label_encoder.pkl"
         assert settings.MIN_CONFIDENCE_THRESHOLD == 0.7
-        assert settings.LOG_LEVEL == "INFO"
+        assert settings.MAX_REQUESTS_PER_MINUTE == 60
+        assert settings.ENABLE_METRICS is True
+        assert settings.METRICS_PORT == 8000
     
     def test_environment_variable_override(self):
         """Test configuration override with environment variables"""

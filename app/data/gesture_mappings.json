@@ -1,0 +1,24 @@
+{
+  "maze_controls": {
+    "thumbs_up": "UP",
+    "like": "UP",
+    "thumbs_down": "DOWN",
+    "dislike": "DOWN", 
+    "fist": "LEFT",
+    "peace": "RIGHT",
+    "two_up": "RIGHT",
+    "stop": "STOP",
+    "palm": "STOP",
+    "ok": "PAUSE",
+    "point_up": "UP",
+    "point_down": "DOWN",
+    "point_left": "LEFT",
+    "point_right": "RIGHT"
+  },
+  "confidence_thresholds": {
+    "high_confidence": 0.9,
+    "medium_confidence": 0.7,
+    "low_confidence": 0.5,
+    "minimum_viable": 0.3
+  }
+}

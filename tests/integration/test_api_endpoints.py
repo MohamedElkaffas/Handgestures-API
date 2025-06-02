@@ -87,8 +87,8 @@ class TestAPIEndpoints:
             )
             
             assert response.status_code == 500
-            assert "Prediction error" in response.json()["detail"]
-    
+            assert "Internal prediction error" in response.json()["detail"]  
+            
     def test_maze_control_endpoint_success(self, realistic_thumbs_up_landmarks):
         """Test successful maze control"""
         mock_prediction = {

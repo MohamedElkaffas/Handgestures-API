@@ -16,6 +16,8 @@ class GestureInput(BaseModel):
     
     @validator('landmarks')
     def validate_landmarks(cls, v):
+        if len(v) != 63:
+            raise ValueError(f"Expected exactly 63 landmarks, got {len(v)}")
         if any(x < 0 or x > 1 for x in v):
             raise ValueError("Landmark coordinates must be normalized between 0 and 1")
         return v
@@ -34,3 +36,9 @@ class MazeControlResponse(BaseModel):
     confidence: float = Field(..., ge=0, le=1, description="Confidence score")
     is_valid: bool = Field(..., description="Whether confidence meets threshold")
     threshold: float = Field(..., description="Minimum confidence threshold")
+
+class HealthResponse(BaseModel):
+    """Response model for health check"""
+    status: str = Field(..., description="Service status")
+    model_loaded: bool = Field(..., description="Whether model is loaded")
+    timestamp: str = Field(..., description="Timestamp of health check")

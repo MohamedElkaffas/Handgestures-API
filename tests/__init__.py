@@ -58,7 +58,7 @@ def get_sample_landmarks(gesture_type="neutral"):
         ]
     elif gesture_type == "fist":
         # All fingers closed
-        return [0.5, 0.8, 0.0] + [0.5 + i*0.01, 0.75 + i*0.005, 0.0 for i in range(20)]
+        return [0.5, 0.8, 0.0] + [item for i in range(20) for item in [0.5 + i*0.01, 0.75 + i*0.005, 0.0]]
     else:
         # Neutral/default landmarks
         return [0.5 + i*0.01 for i in range(63)]

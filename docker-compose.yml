@@ -5,19 +5,11 @@ services:
       dockerfile: Dockerfile
     container_name: hand_gesture_api
     ports:
-      - "8000:8000"
+      - "8001:8000"  
     environment:
       - ENABLE_METRICS=true
       - MIN_CONFIDENCE_THRESHOLD=0.7
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     restart: unless-stopped
-    networks:
-      - monitoring
 
   prometheus:
     image: prom/prometheus:v2.45.0
@@ -26,20 +18,9 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=7d'
-      - '--storage.tsdb.retention.size=1GB'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
-      - '--log.level=info'
     restart: unless-stopped
     depends_on:
       - hand_gesture_api
-    networks:
-      - monitoring
 
   grafana:
     image: grafana/grafana:10.0.0
@@ -52,9 +33,3 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus
-    networks:
-      - monitoring
-
-networks:
-  monitoring:
-    driver: bridge

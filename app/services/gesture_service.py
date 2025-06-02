@@ -1,81 +1,126 @@
 """
-Gesture recognition business logic service
+Gesture prediction service with proper 2D preprocessing
+Matches the training pipeline preprocessing
 """
 
-import joblib
 import pickle
-import pandas as pd
 import numpy as np
-from pathlib import Path
-import json
+from typing import List, Dict, Any
+import logging
 
-from app.utils.preprocessing import process_hand_landmarks_xy
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class GestureService:
-    """Service for gesture recognition and maze control logic"""
+    """Service for hand gesture prediction with 2D preprocessing"""
     
     def __init__(self, model_path: str, encoder_path: str):
-        self.model_path = Path(model_path)
-        self.encoder_path = Path(encoder_path)
+        self.model_path = model_path
+        self.encoder_path = encoder_path
         self.model = None
         self.label_encoder = None
-        self.gesture_mappings = None
-        self._load_resources()
+        
+        # Gesture to maze action mapping
+        self.gesture_to_action = {
+            'thumbs_up': 'UP',
+            'thumbs_down': 'DOWN', 
+            'pointing_left': 'LEFT',
+            'pointing_right': 'RIGHT',
+            'open_hand': 'STOP',
+            'fist': 'WAIT',
+            'peace': 'PAUSE',
+            'ok_sign': 'OK'
+        }
+        
+        self._load_models()
     
-    def _load_resources(self):
-        """Load model, encoder, and gesture mappings"""
+    def _load_models(self):
+        """Load the trained model and label encoder"""
         try:
-            # Load model
-            self.model = joblib.load(self.model_path)
+            # Load the trained model
+            with open(self.model_path, 'rb') as f:
+                self.model = pickle.load(f)
+            logger.info(f"Model loaded from {self.model_path}")
             
-            # Load label encoder
+            # Load the label encoder
             with open(self.encoder_path, 'rb') as f:
                 self.label_encoder = pickle.load(f)
+            logger.info(f"Label encoder loaded from {self.encoder_path}")
             
-            # Load gesture mappings
-            mappings_path = Path("app/data/gesture_mappings.json")
-            with open(mappings_path) as f:
-                self.gesture_mappings = json.load(f)
-                
+        except FileNotFoundError as e:
+            logger.error(f"Model files not found: {e}")
+            self.model = None
+            self.label_encoder = None
         except Exception as e:
-            raise RuntimeError(f"Failed to load model resources: {e}")
+            logger.error(f"Error loading models: {e}")
+            self.model = None
+            self.label_encoder = None
     
-    def predict(self, landmarks: list) -> dict:
+    def preprocess_landmarks(self, landmarks: List[float]) -> np.ndarray:
         """
-        Predict gesture from landmarks
+        Preprocess landmarks to match training pipeline
+        Input: 63 values (21 landmarks × 3 coordinates)
+        Output: 2D array (21, 3) -> flattened for model
         """
+        if len(landmarks) != 63:
+            raise ValueError(f"Expected 63 landmarks, got {len(landmarks)}")
+        
+        # Convert to numpy array
+        landmarks_array = np.array(landmarks, dtype=np.float32)
+        
+        # Reshape to 2D format (21 landmarks, 3 coordinates each)
+        landmarks_2d = landmarks_array.reshape(21, 3)
+        
+        # Validate normalized coordinates (should be 0-1 for x,y)
+        if np.any(landmarks_2d[:, :2] < 0) or np.any(landmarks_2d[:, :2] > 1):
+            logger.warning("Some landmarks outside [0,1] range")
+        
+        # Additional preprocessing (if you did any in training)
+        # Example: normalize z-coordinates or apply other transformations
+        processed_landmarks = landmarks_2d.copy()
+        
+        # Flatten back for model input (most models expect 1D)
+        return processed_landmarks.flatten()
+    
+    def predict(self, landmarks: List[float]) -> Dict[str, Any]:
+        """
+        Predict gesture from landmarks with proper preprocessing
+        """
+        if not self.model or not self.label_encoder:
+            raise RuntimeError("Model not loaded properly")
+        
         try:
-            # Preprocess landmarks
-            features = process_hand_landmarks_xy(pd.Series(landmarks)).reshape(1, -1)
+            # Apply the same preprocessing as training
+            processed_landmarks = self.preprocess_landmarks(landmarks)
             
-            # Get predictions
-            pred_numeric = self.model.predict(features)[0]
-            pred_proba = self.model.predict_proba(features)[0]
-            confidence = float(max(pred_proba))
+            # Reshape for model prediction (1, 63)
+            input_data = processed_landmarks.reshape(1, -1)
             
-            # Convert to gesture name
-            gesture_name = self.label_encoder.inverse_transform([pred_numeric])[0]
+            # Make prediction
+            prediction = self.model.predict(input_data)[0]
+            prediction_proba = self.model.predict_proba(input_data)[0]
+            
+            # Get gesture name
+            gesture_name = self.label_encoder.inverse_transform([prediction])[0]
+            
+            # Get confidence (max probability)
+            confidence = float(np.max(prediction_proba))
             
             # Get maze action
-            maze_action = self.gesture_mappings["maze_controls"].get(gesture_name, "UNKNOWN")
+            maze_action = self.gesture_to_action.get(gesture_name, 'WAIT')
             
             return {
-                "gesture_name": gesture_name,
-                "maze_action": maze_action,
-                "confidence": confidence,
-                "prediction_number": int(pred_numeric)
+                'gesture_name': gesture_name,
+                'maze_action': maze_action,
+                'confidence': confidence,
+                'prediction_number': int(prediction)
             }
             
         except Exception as e:
-            raise ValueError(f"Prediction failed: {e}")
+            logger.error(f"Prediction error: {e}")
+            raise RuntimeError(f"Prediction failed: {str(e)}")
     
     def health_check(self) -> bool:
-        """Check if model is loaded and functional"""
-        try:
-            return all([
-                self.model is not None,
-                self.label_encoder is not None,
-                self.gesture_mappings is not None
-            ])
-        except:
-            return False
+        """Check if the service is healthy"""
+        return self.model is not None and self.label_encoder is not None

@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   hand_gesture_api:
     build:

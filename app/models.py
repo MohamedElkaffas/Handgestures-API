@@ -2,19 +2,20 @@
 Pydantic models for request/response validation
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List
 
 class GestureInput(BaseModel):
     """Input model for hand gesture landmarks"""
     landmarks: List[float] = Field(
         ..., 
-        min_items=63, 
-        max_items=63, 
+        min_length=63, 
+        max_length=63, 
         description="63 MediaPipe hand landmarks (21 points × 3 coordinates)"
     )
     
-    @validator('landmarks')
+    @field_validator('landmarks')
+    @classmethod
     def validate_landmarks(cls, v):
         if len(v) != 63:
             raise ValueError(f"Expected exactly 63 landmarks, got {len(v)}")
@@ -38,7 +39,7 @@ class MazeControlResponse(BaseModel):
     threshold: float = Field(..., description="Minimum confidence threshold")
 
 class HealthResponse(BaseModel):
-    """Response model for health check"""
+    """Response model for health check - Fixed field name"""
     status: str = Field(..., description="Service status")
-    model_loaded: bool = Field(..., description="Whether model is loaded")
+    model_status: bool = Field(..., description="Whether model is loaded")  
     timestamp: str = Field(..., description="Timestamp of health check")

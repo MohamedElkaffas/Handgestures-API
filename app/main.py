@@ -51,7 +51,7 @@ async def health_check():
     model_status = gesture_service.health_check()
     return {
         "status": "healthy" if model_status else "unhealthy",
-        "model_loaded": model_status,
+        "model_status": model_status,
         "timestamp": monitoring_service.get_timestamp()
     }
 

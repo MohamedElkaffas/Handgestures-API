@@ -1,20 +1,19 @@
 """
 Gesture prediction service with proper 2D preprocessing
 Matches the training pipeline preprocessing
+FIXED preprocessing to match training
 """
 
-import joblib  
-import pickle
+import joblib
 import numpy as np
 from typing import List, Dict, Any
 import logging
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class GestureService:
-    """Service for hand gesture prediction with proper joblib loading"""
+    """Service for hand gesture prediction with CORRECT preprocessing"""
     
     def __init__(self, model_path: str, encoder_path: str):
         self.model_path = model_path
@@ -39,58 +38,56 @@ class GestureService:
     def _load_models(self):
         """Load the trained model and label encoder using joblib"""
         try:
-            # Load the trained model with joblib (not pickle!)
             self.model = joblib.load(self.model_path)
             logger.info(f"Model loaded with joblib from {self.model_path}")
             
-            # Load the label encoder with joblib  
             self.label_encoder = joblib.load(self.encoder_path)
             logger.info(f"Label encoder loaded with joblib from {self.encoder_path}")
             
-        except FileNotFoundError as e:
-            logger.error(f"Model files not found: {e}")
-            self.model = None
-            self.label_encoder = None
+            # Check model input requirements
+            if hasattr(self.model, 'n_features_in_'):
+                logger.info(f"Model expects {self.model.n_features_in_} features")
+            
         except Exception as e:
-            logger.error(f"Error loading models with joblib: {e}")
+            logger.error(f"Error loading models: {e}")
             self.model = None
             self.label_encoder = None
     
     def preprocess_landmarks(self, landmarks: List[float]) -> np.ndarray:
         """
-        Preprocess landmarks to match training pipeline
+        FIXED: Preprocess landmarks to match training pipeline
         Input: 63 values (21 landmarks × 3 coordinates)
-        Output: 2D array (21, 3) -> flattened for model
+        Output: 42 values (21 landmarks × 2 coordinates) - ONLY x,y
         """
         if len(landmarks) != 63:
             raise ValueError(f"Expected 63 landmarks, got {len(landmarks)}")
         
-        # Convert to numpy array
-        landmarks_array = np.array(landmarks, dtype=np.float32)
+        # Convert to numpy array and reshape to (21, 3)
+        landmarks_array = np.array(landmarks, dtype=np.float32).reshape(21, 3)
         
-        # Reshape to 2D format (21 landmarks, 3 coordinates each)
-        landmarks_2d = landmarks_array.reshape(21, 3)
+        # CRITICAL FIX: Extract only x,y coordinates (drop z)
+        # Model was trained with 42 features = 21 landmarks × 2 coordinates
+        xy_coordinates = landmarks_array[:, :2]  # Only x,y, drop z
         
-        # Validate normalized coordinates (should be 0-1 for x,y)
-        if np.any(landmarks_2d[:, :2] < 0) or np.any(landmarks_2d[:, :2] > 1):
-            logger.warning("Some landmarks outside [0,1] range")
+        # Flatten to 42 features for model input
+        processed = xy_coordinates.flatten()
         
-        # Flatten back for model input (most models expect 1D)
-        return landmarks_2d.flatten()
+        logger.info(f"Preprocessed {len(landmarks)} -> {len(processed)} features")
+        return processed
     
     def predict(self, landmarks: List[float]) -> Dict[str, Any]:
-        """
-        Predict gesture from landmarks with proper preprocessing
-        """
+        """Predict gesture with CORRECT preprocessing"""
         if not self.model or not self.label_encoder:
             raise RuntimeError("Model not loaded properly")
         
         try:
-            # Apply the same preprocessing as training
+            # Apply CORRECTED preprocessing (63 -> 42 features)
             processed_landmarks = self.preprocess_landmarks(landmarks)
             
-            # Reshape for model prediction (1, 63)
+            # Reshape for model prediction (1, 42)
             input_data = processed_landmarks.reshape(1, -1)
+            
+            logger.info(f"Input shape: {input_data.shape}")
             
             # Make prediction
             prediction = self.model.predict(input_data)[0]
@@ -99,7 +96,7 @@ class GestureService:
             # Get gesture name
             gesture_name = self.label_encoder.inverse_transform([prediction])[0]
             
-            # Get confidence (max probability)
+            # Get confidence
             confidence = float(np.max(prediction_proba))
             
             # Get maze action

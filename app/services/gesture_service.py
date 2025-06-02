@@ -3,6 +3,7 @@ Gesture prediction service with proper 2D preprocessing
 Matches the training pipeline preprocessing
 """
 
+import joblib  
 import pickle
 import numpy as np
 from typing import List, Dict, Any
@@ -13,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class GestureService:
-    """Service for hand gesture prediction with 2D preprocessing"""
+    """Service for hand gesture prediction with proper joblib loading"""
     
     def __init__(self, model_path: str, encoder_path: str):
         self.model_path = model_path
@@ -36,24 +37,22 @@ class GestureService:
         self._load_models()
     
     def _load_models(self):
-        """Load the trained model and label encoder"""
+        """Load the trained model and label encoder using joblib"""
         try:
-            # Load the trained model
-            with open(self.model_path, 'rb') as f:
-                self.model = pickle.load(f)
-            logger.info(f"Model loaded from {self.model_path}")
+            # Load the trained model with joblib (not pickle!)
+            self.model = joblib.load(self.model_path)
+            logger.info(f"Model loaded with joblib from {self.model_path}")
             
-            # Load the label encoder
-            with open(self.encoder_path, 'rb') as f:
-                self.label_encoder = pickle.load(f)
-            logger.info(f"Label encoder loaded from {self.encoder_path}")
+            # Load the label encoder with joblib  
+            self.label_encoder = joblib.load(self.encoder_path)
+            logger.info(f"Label encoder loaded with joblib from {self.encoder_path}")
             
         except FileNotFoundError as e:
             logger.error(f"Model files not found: {e}")
             self.model = None
             self.label_encoder = None
         except Exception as e:
-            logger.error(f"Error loading models: {e}")
+            logger.error(f"Error loading models with joblib: {e}")
             self.model = None
             self.label_encoder = None
     
@@ -76,12 +75,8 @@ class GestureService:
         if np.any(landmarks_2d[:, :2] < 0) or np.any(landmarks_2d[:, :2] > 1):
             logger.warning("Some landmarks outside [0,1] range")
         
-        # Additional preprocessing (if you did any in training)
-        # Example: normalize z-coordinates or apply other transformations
-        processed_landmarks = landmarks_2d.copy()
-        
         # Flatten back for model input (most models expect 1D)
-        return processed_landmarks.flatten()
+        return landmarks_2d.flatten()
     
     def predict(self, landmarks: List[float]) -> Dict[str, Any]:
         """

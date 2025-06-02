@@ -1,9 +1,16 @@
 """
 Application configuration management
+Compatible with both Pydantic v1 and v2
 """
 
-from pydantic import BaseSettings
 from functools import lru_cache
+
+try:
+    # Try Pydantic v1 import
+    from pydantic import BaseSettings
+except ImportError:
+    # Fallback to Pydantic v2 import
+    from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """Application settings with environment variable support"""

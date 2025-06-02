@@ -23,14 +23,20 @@ class GestureService:
         
         # Gesture to maze action mapping
         self.gesture_to_action = {
-            'thumbs_up': 'UP',
-            'thumbs_down': 'DOWN', 
-            'pointing_left': 'LEFT',
-            'pointing_right': 'RIGHT',
-            'open_hand': 'STOP',
-            'fist': 'WAIT',
-            'peace': 'PAUSE',
-            'ok_sign': 'OK'
+            'like': 'UP',           
+            'dislike': 'DOWN',      
+            'one': 'LEFT',          
+            'rock': 'RIGHT',         
+            'palm': 'STOP',         
+            'fist': 'WAIT',         
+            'peace': 'PAUSE',       
+            'ok': 'OK',             
+            'call': 'ACTION',       
+            'stop': 'STOP',         
+            'mute': 'MUTE',         
+            'four': 'FOUR',         
+            'three': 'THREE',       
+            'two_up': 'TWO',        
         }
         
         self._load_models()

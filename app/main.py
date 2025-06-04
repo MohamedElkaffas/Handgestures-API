@@ -34,7 +34,7 @@ origins = [
     # If you’re hosting your front end on a specific domain, list it here:
     "http://localhost:8090",
     "http://127.0.0.1:8090",
-    https://mohamedelkaffas.github.io/MLOPs-Final-Project/
+    "https://mohamedelkaffas.github.io/MLOPs-Final-Project/"
 ]
 
 app.add_middleware(

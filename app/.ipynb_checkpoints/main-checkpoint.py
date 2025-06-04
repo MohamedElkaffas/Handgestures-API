@@ -3,6 +3,7 @@ FastAPI main application for Hand Gesture Maze Controller API
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 import uvicorn
 
@@ -23,6 +24,29 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
+)
+
+# ────────────────────────────────────────────────────────────────────────────────
+#  Enable CORS so that the front end (served at http://localhost:3000 or file://)
+#  can successfully call this API (which is listening on http://localhost:8001).
+# ────────────────────────────────────────────────────────────────────────────────
+origins = [
+    # If you’re hosting your front end on a specific domain, list it here:
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    # If you just want to allow “any origin” during local dev:
+    "http://localhost",
+    "http://127.0.0.1",
+    "file://",            # if you open index.html directly from the file system
+    "*",                  # <– you can use "*" for “allow all origins” in dev
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 # Prometheus instrumentation
@@ -51,7 +75,7 @@ async def health_check():
     model_status = gesture_service.health_check()
     return {
         "status": "healthy" if model_status else "unhealthy",
-        "model_loaded": model_status,
+        "model_status": model_status,
         "timestamp": monitoring_service.get_timestamp()
     }
 

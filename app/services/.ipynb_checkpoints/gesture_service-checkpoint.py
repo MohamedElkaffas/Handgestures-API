@@ -61,24 +61,37 @@ class GestureService:
     
     def preprocess_landmarks(self, landmarks: List[float]) -> np.ndarray:
         """
-        FIXED: Preprocess landmarks to match training pipeline
+        FIXED: Preprocess landmarks to match training pipeline exactly.
         Input: 63 values (21 landmarks × 3 coordinates)
-        Output: 42 values (21 landmarks × 2 coordinates) - ONLY x,y
+        Output: 42 values (21 landmarks × 2 coordinates) 
+                shifted so wrist=(0,0) and scaled by distance to mid‐finger tip (#12)
         """
         if len(landmarks) != 63:
             raise ValueError(f"Expected 63 landmarks, got {len(landmarks)}")
-        
-        # Convert to numpy array and reshape to (21, 3)
+
+        # (a) Turn into a (21,3) array
         landmarks_array = np.array(landmarks, dtype=np.float32).reshape(21, 3)
-        
-        # CRITICAL FIX: Extract only x,y coordinates (drop z)
-        # Model was trained with 42 features = 21 landmarks × 2 coordinates
-        xy_coordinates = landmarks_array[:, :2]  # Only x,y, drop z
-        
-        # Flatten to 42 features for model input
-        processed = xy_coordinates.flatten()
-        
-        logger.info(f"Preprocessed {len(landmarks)} -> {len(processed)} features")
+
+        # (b) Drop the z‐coordinate, keep only x,y
+        xy_coordinates = landmarks_array[:, :2]  # shape = (21,2)
+
+        # (c) Recenter so that landmark #1 (index 0) is the origin
+        wrist = xy_coordinates[0, :]             # this is (x1, y1)
+        rel_coords = xy_coordinates - wrist       # now wrist is at (0,0)
+
+        # (d) Compute scale = Euclidean distance from wrist to mid‐finger tip (#12 → index 11)
+        mid_tip = rel_coords[11, :]               # rel_coords[11] is (x12_, y12_) 
+        scale = np.linalg.norm(mid_tip)
+        if scale == 0:
+            scale = 1.0  # avoid division by zero
+
+        # (e) Normalize all points by that distance
+        normalized = rel_coords / scale           # shape = (21,2)
+
+        # (f) Flatten back to 42 features
+        processed = normalized.flatten()           # shape = (42,)
+
+        logger.info(f"Preprocessed 63→42 features (dropped z, recentered, normalized)")
         return processed
     
     def predict(self, landmarks: List[float]) -> Dict[str, Any]:

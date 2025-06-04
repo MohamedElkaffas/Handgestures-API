@@ -32,13 +32,9 @@ app = FastAPI(
 # ────────────────────────────────────────────────────────────────────────────────
 origins = [
     # If you’re hosting your front end on a specific domain, list it here:
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    # If you just want to allow “any origin” during local dev:
-    "http://localhost",
-    "http://127.0.0.1",
-    "file://",            # if you open index.html directly from the file system
-    "*",                  # <– you can use "*" for “allow all origins” in dev
+    "http://localhost:8090",
+    "http://127.0.0.1:8090",
+    https://mohamedelkaffas.github.io/MLOPs-Final-Project/
 ]
 
 app.add_middleware(

@@ -5,7 +5,7 @@ def test_simple():
     """Test that basic Python works"""
     assert 1 + 1 == 2
     assert "hello" == "hello"
-'''
+"""
 def test_basic_imports():
     """Test that basic Python modules work"""
     import os
@@ -51,4 +51,4 @@ def test_gesture_input_basic():
 
         # If validation fails for any reason, just pass
         pass
-```
+"""

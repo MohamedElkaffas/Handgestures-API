@@ -1,8 +1,6 @@
 services:
   hand_gesture_api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: docker.io/scorpio1317/mlops_maze:latest  # Uses the published image from Docker Hub
     container_name: hand_gesture_api
     ports:
       - "8001:8000"  
@@ -10,6 +8,7 @@ services:
       - ENABLE_METRICS=true
       - MIN_CONFIDENCE_THRESHOLD=0.1
     restart: unless-stopped
+    pull_policy: always  # Always pull latest version from Docker Hub
 
   prometheus:
     image: prom/prometheus:v2.45.0

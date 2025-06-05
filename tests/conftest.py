@@ -3,10 +3,9 @@ Pytest configuration and shared fixtures
 """
 import pytest
 
-# Only basic fixtures that don't import complex dependencies
 @pytest.fixture
 def simple_data():
-    """Simple test data that doesn't require external libraries"""
+    """Simple test data as place holder"""
     return {"test": "data", "number": 42}
 
 @pytest.fixture

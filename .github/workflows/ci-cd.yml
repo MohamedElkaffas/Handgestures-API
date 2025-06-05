@@ -24,7 +24,7 @@ jobs:
           pip install pytest
           
       - name: Run unit tests
-        run: pytest tests/test_basic_ci.py -q
+        run: pytest -q
         
   build-and-push:
     needs: test

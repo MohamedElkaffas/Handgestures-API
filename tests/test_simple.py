@@ -1,7 +1,7 @@
 # tests/test_simple.py
 """Simple project-related tests for CI"""
 
-def test_basic_python():
+def test_simple():
     """Test that basic Python works"""
     assert 1 + 1 == 2
     assert "hello" == "hello"
@@ -48,6 +48,7 @@ def test_gesture_input_basic():
         # If import fails, just pass
         pass
     except Exception:
-'''    
+
         # If validation fails for any reason, just pass
         pass
+```

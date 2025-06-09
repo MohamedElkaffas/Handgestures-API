@@ -1,28 +1,10 @@
-# Multi-stage build for Python 3.8.8 - Fixed version
-FROM python:3.9-slim AS builder
+# Single-stage build - Python 3.9 (avoids cache issues)
+FROM python:3.9-slim
 
-# Install build dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
-    curl \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Copy requirements first for better caching
-COPY requirements.txt .
-
-# Install pip and packages in separate steps to avoid issues
-RUN pip install --no-cache-dir --upgrade pip==21.3.1
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Production stage
-FROM python:3.9-slim AS production
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
     curl \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/* \
@@ -33,12 +15,12 @@ RUN groupadd -r apiuser && useradd -r -g apiuser apiuser
 
 WORKDIR /app
 
-# Copy Python packages from builder
-COPY --from=builder /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copy requirements and install Python packages
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY requirements.txt .
 COPY app/ ./app/
 COPY model/ ./model/
 

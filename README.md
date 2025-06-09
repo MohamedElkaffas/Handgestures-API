@@ -9,7 +9,7 @@ Production-ready FastAPI service for real-time hand gesture recognition using Me
 ## 🚀 Live Demo
 
 - **🎮 Game**: [Play Gesture-Controlled Maze](https://mohamedelkaffas.github.io/MLOPs-Final-Project/)
-- **📚 API Docs**: [Interactive API Documentation](https://agkckrhhrjhv.eu-central-1.clawcloudrun.com/docs)
+- **📚 API Docs**: [Interactive API Documentation](https://oyrnfmwvrjoh.eu-central-1.clawcloudrun.com/docs)
 - **📊 Monitoring**: Prometheus + Grafana dashboards included
 
 ## ✨ Features

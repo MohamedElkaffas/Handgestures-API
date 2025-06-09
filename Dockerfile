@@ -1,5 +1,5 @@
 # Multi-stage build for Python 3.8.8 - Fixed version
-FROM python:3.8.8-slim AS builder
+FROM python:3.9-slim AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \

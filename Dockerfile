@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir --upgrade pip==21.3.1
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Production stage
-FROM python:3.8.8-slim AS production
+FROM python:3.9-slim AS production
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
